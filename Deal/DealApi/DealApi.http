@@ -1,0 +1,6 @@
+@DealApi_HostAddress = http://localhost:5064
+
+GET {{DealApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

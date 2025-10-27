@@ -1,0 +1,6 @@
+@SmartInvoiceApi_HostAddress = http://localhost:5014
+
+GET {{SmartInvoiceApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
