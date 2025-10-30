@@ -1,4 +1,5 @@
 ﻿using DocFusion.Application.Interfaces;
+using DocFusion.Infrastructure.Utils;
 using Tesseract;
 
 namespace DocFusion.Infrastructure.Services;
@@ -14,7 +15,7 @@ public class TesseractOcrService : IOcrService
 
     public string ExtractText(Stream fileStream, string fileName)
     {
-        string extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
 
         return extension switch
         {
@@ -38,24 +39,4 @@ public class TesseractOcrService : IOcrService
     {
         return "";
     }
-    
-    // --- вспомогательные классы ---
-    private sealed class TempFile : IDisposable
-    {
-        public string Path { get; }
-
-        public TempFile(Stream input)
-        {
-            Path = System.IO.Path.GetTempFileName();
-            using var fs = File.Create(Path);
-            input.CopyTo(fs);
-            fs.Flush();
-        }
-
-        public void Dispose()
-        {
-            try { File.Delete(Path); } catch { }
-        }
-    }
 }
-
