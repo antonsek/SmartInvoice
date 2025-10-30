@@ -11,4 +11,8 @@
     <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DocFusion.Application\DocFusion.Application.csproj" />
+  </ItemGroup>
+
 </Project>
