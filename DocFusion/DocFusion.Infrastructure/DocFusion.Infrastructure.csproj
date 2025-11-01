@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <ProjectReference Include="..\DocFusion.Application\DocFusion.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocFusion.Application\DocFusion.Application.csproj" />
+    <PackageReference Include="IronOcr" Version="2025.10.11" />
+    <PackageReference Include="IronOcr.Languages.Russian" Version="2020.11.2" />
+    <PackageReference Include="IronOcr.Linux" Version="2025.10.11" />
   </ItemGroup>
 
 </Project>
