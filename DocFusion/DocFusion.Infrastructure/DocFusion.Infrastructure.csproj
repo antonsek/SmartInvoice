@@ -17,6 +17,8 @@
     <PackageReference Include="IronOcr.Languages.Kazakh" Version="2020.11.2" />
     <PackageReference Include="IronOcr.Languages.Russian" Version="2020.11.2" />
     <PackageReference Include="IronOcr.Linux" Version="2025.10.11" />
+    <PackageReference Include="IronOcr.MacOs" Version="2025.10.11" />
+    <PackageReference Include="IronOcr.MacOs.ARM" Version="2025.10.11" />
   </ItemGroup>
 
 </Project>
