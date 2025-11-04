@@ -9,7 +9,6 @@ public class OcrService : IOcrService
 
     public OcrService()
     {
-
         IronOcr.License.LicenseKey = "test";
         _ocr = new IronTesseract();
         _ocr.Language = OcrLanguage.Russian;
@@ -34,7 +33,7 @@ public class OcrService : IOcrService
         input.LoadImage(stream);
 
         var result = _ocr.ReadDocument(input);
-        Console.WriteLine($"🖼️ OCR Confidence: {result.Confidence:0.0}%");
+        Console.WriteLine($"Image OCR Confidence: {result.Confidence:0.0}%");
         return result.Text;
     }
 
@@ -44,7 +43,7 @@ public class OcrService : IOcrService
         input.LoadPdf(pdfStream);
         
         var result = _ocr.ReadDocument(input);
-        Console.WriteLine($"📄 PDF OCR Confidence: {result.Confidence:0.0}%");
+        Console.WriteLine($"PDF OCR Confidence: {result.Confidence:0.0}%");
         return result.Text;
     }
 }

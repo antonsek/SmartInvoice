@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddTransient<ExtractDataService>();
 builder.Services.AddSingleton<IOcrService>(new OcrService());
+builder.Services.AddHttpClient<IAiService, OllamaAiService>();
 builder.Services.AddControllers();
 
 //windows C:\Program Files\Tesseract-OCR\tessdata

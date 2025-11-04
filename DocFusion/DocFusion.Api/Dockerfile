@@ -18,14 +18,22 @@ RUN dotnet publish "./DocFusion.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 # ---------- RUNTIME STAGE ----------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
-# ✅ IronOCR system deps 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdiplus \
     libc6-dev \
     libx11-dev \
     libfontconfig1 \
     libfreetype6 \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libgif-dev \
+    libvips \
     && rm -rf /var/lib/apt/lists/*
+
+# Create tessdata dir
+RUN mkdir -p /usr/share/tesseract-ocr/4.00/tessdata
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/
 
 WORKDIR /app
 COPY --from=build /app/publish .
