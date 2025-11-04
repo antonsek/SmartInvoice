@@ -29,7 +29,7 @@ public class OllamaAiService : IAiService
             stream = false
         };
 
-        var response = await _http.PostAsJsonAsync("/api/chat", request);
+        var response = await _http.PostAsJsonAsync("/api/generate", request);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
