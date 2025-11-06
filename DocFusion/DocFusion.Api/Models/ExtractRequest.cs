@@ -3,5 +3,5 @@
 public class ExtractRequest
 {
     public IFormFile File { get; set; }
-    public string Prompt { get; set; }
+    public string? Prompt { get; set; }
 }

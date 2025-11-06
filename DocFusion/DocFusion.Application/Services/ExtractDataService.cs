@@ -17,8 +17,6 @@ public class ExtractDataService
     {
         var text = _ocrService.ExtractText(fileStream, fileName);
         var json = await _aiService.ProcessAsync(text, prompt);
-        
-        Console.WriteLine(json);
 
         return new DocumentResult
         {

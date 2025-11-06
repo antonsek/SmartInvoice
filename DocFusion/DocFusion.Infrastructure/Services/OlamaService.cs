@@ -47,8 +47,29 @@ public class OllamaAiService : IAiService
 
         return json?["response"]?.ToString() ?? "";
     }
-
     
+    public async Task<string> CustomProcessAsync(string text, string prompt)
+    {
+        var request = new
+        {
+            model = _model,
+            prompt = $@"
+                {prompt}
 
-    
+                Текст документа:
+                {text}
+                ".Trim(),
+            stream = false,
+            temperature = 0,
+            format = "json",
+            stop = new[] { "```", "###", "</" }
+        };
+
+        var response = await _http.PostAsJsonAsync("/api/generate", request);
+        response.EnsureSuccessStatusCode();
+        
+        var json = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        return json?["response"]?.ToString() ?? "";
+    }
 }

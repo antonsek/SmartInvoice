@@ -1,6 +1,7 @@
 using DocFusion.Application.Interfaces;
 using DocFusion.Application.Services;
 using DocFusion.Infrastructure.Services;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +18,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddTransient<ExtractDataService>();
+builder.Services.AddTransient<DocumentValidationService>();
+builder.Services.AddTransient<ValidationService>();
 builder.Services.AddSingleton<IOcrService>(new OcrService());
 builder.Services.AddHttpClient<IAiService, OllamaAiService>();
 builder.Services.AddControllers();
 
-//windows C:\Program Files\Tesseract-OCR\tessdata
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 100 MB
+});
 
 var app = builder.Build();
 
