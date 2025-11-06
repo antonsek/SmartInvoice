@@ -33,7 +33,7 @@ public class ExtractController : ControllerBase
         return Ok(new
         {
             success = true,
-            json = result.RawText
+            json = result.JsonResult
         });
     }
 }
