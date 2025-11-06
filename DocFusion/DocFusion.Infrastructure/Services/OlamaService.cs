@@ -14,26 +14,38 @@ public class OllamaAiService : IAiService
     {
         _http = http;
         _http.BaseAddress = new Uri(config["Ollama:Host"] ?? "http://localhost:11434");
-        _model = config["Ollama:Model"] ?? "llama3.1";
+        _model = config["Ollama:Model"] ?? "phi3:mini";
+        _http.Timeout = TimeSpan.FromMinutes(5);
     }
     public async Task<string> ProcessAsync(string text, string prompt)
     {
         var request = new
         {
             model = _model,
-            messages = new[]
-            {
-                new { role = "system", content = "Ты помощник. Отвечай строго по запросу пользователя." },
-                new { role = "user", content = $"{prompt}\n\nТекст документа:\n{text}"}
-            },
-            stream = false
+            prompt = $@"
+                Ты сервис извлечения данных.
+                Отвечай только JSON. Без текста, комментариев и описаний.
+                Если данных нет — ставь null.
+
+                Запрос:
+                {prompt}
+
+                Текст документа:
+                {text}
+
+                Ответ должен быть строго JSON.
+                ".Trim(),
+            stream = false,
+            temperature = 0,
+            stop = new[] { "```", "###", "</" }
         };
 
         var response = await _http.PostAsJsonAsync("/api/generate", request);
         response.EnsureSuccessStatusCode();
+        
+        var json = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
 
-        var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
-        return result?.message?.content ?? "";
+        return json?["response"]?.ToString() ?? "";
     }
 
     
