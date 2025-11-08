@@ -9,7 +9,7 @@ public class OcrService : IOcrService
 
     public OcrService()
     {
-        IronOcr.License.LicenseKey = "token";
+        IronOcr.License.LicenseKey = "IRONSUITE.ANTONSEK96.GMAIL.COM.30010-F8168DE5D8-KZH3Q-6E27HTJ54NT5-LTI4DQ2SFXHR-HWZNVGGZNIUU-5YU3PN3XBANA-W3F4LMWNZCDA-DM526WAEAG4A-SUIX67-TWG55NX4B4OQEA-DEPLOYMENT.TRIAL-D73BKH.TRIAL.EXPIRES.01.DEC.2025";
         _ocr = new IronTesseract();
         _ocr.Language = OcrLanguage.Russian;
         _ocr.AddSecondaryLanguage(OcrLanguage.English);
