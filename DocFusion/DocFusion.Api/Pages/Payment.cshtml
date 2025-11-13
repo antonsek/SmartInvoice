@@ -1,0 +1,222 @@
+@page
+@model DocFusion.Web.Pages.Payment
+@{
+  ViewData["Title"] = "Валютный перевод — Проверка ИИ";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+<div class="max-w-5xl mx-auto bg-white shadow-md rounded-lg mt-8 p-6">
+  <header class="border-b pb-4 mb-6">
+    <h1 class="text-xl font-semibold text-gray-800">Валютный перевод</h1>
+    <p class="text-sm text-gray-500">
+      Номер документа: <span class="font-medium text-gray-700">@Model.DocumentNumber</span> |
+      Дата валютирования: <span>@Model.ValuationDate:dd.MM.yyyy</span>
+    </p>
+  </header>
+
+  <form id="transferForm" class="space-y-6" enctype="multipart/form-data">
+    <!-- Отправитель -->
+    <section>
+      <h2 class="text-lg font-medium text-gray-700 mb-4">Отправитель</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">ID/NIK (если имеется)</label>
+          <input class="w-full border border-gray-300 rounded-md p-2" placeholder="Введите ID или NIK">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Валюта</label>
+          <select id="currency" class="w-full border border-gray-300 rounded-md p-2">
+            <option>USD</option><option>EUR</option><option>KZT</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Счет списания</label>
+          <input class="w-full border border-gray-300 rounded-md p-2" placeholder="Введите номер счета">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Сумма</label>
+          <input type="number" class="w-full border border-gray-300 rounded-md p-2" placeholder="0.00">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm text-gray-600 mb-1">Код назначения платежа (KNP)</label>
+          <select id="knp" class="border border-gray-300 rounded-md p-2 w-full">
+            <option value="">Выберите код KNP</option>
+            <option value="701">701 — Оплата за товары</option>
+            <option value="801">801 — Оплата за услуги</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Получатель -->
+    <section>
+      <h2 class="text-lg font-medium text-gray-700 mb-4">Получатель</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm text-gray-600 mb-1">Наименование</label><input class="w-full border border-gray-300 rounded-md p-2"></div>
+        <div><label class="block text-sm text-gray-600 mb-1">Счет</label><input class="w-full border border-gray-300 rounded-md p-2"></div>
+      </div>
+    </section>
+
+    <!-- Банк получателя -->
+    <section>
+      <h2 class="text-lg font-medium text-gray-700 mb-4">Банк получателя</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm text-gray-600 mb-1">SWIFT</label><input class="w-full border border-gray-300 rounded-md p-2" placeholder="OCRNAU2JXXX"></div>
+        <div><label class="block text-sm text-gray-600 mb-1">Банк</label><input class="w-full border border-gray-300 rounded-md p-2"></div>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm text-gray-600 mb-1">Назначение платежа</label>
+        <textarea id="purpose" class="w-full border border-gray-300 rounded-md p-2 transition duration-200" rows="3"
+                  placeholder="Введите назначение платежа..."></textarea>
+      </div>
+
+      <div class="mt-4">
+        <label class="block text-sm text-gray-600 mb-1">Загрузите документ (инвойс)</label>
+        <input id="file" type="file" class="w-full border border-gray-300 rounded-md p-2 bg-gray-50">
+      </div>
+    </section>
+
+    <div class="flex justify-end mt-6 items-center gap-3">
+      <button type="button" id="btnCheck" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow">
+        Проверить ИИ
+      </button>
+      <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md shadow">Далее</button>
+    </div>
+  </form>
+</div>
+
+<!-- Модалка -->
+<div id="ai-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+    <div class="p-4 border-b flex justify-between items-center">
+      <h3 class="font-semibold">Результаты проверки ИИ</h3>
+      <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">✕</button>
+    </div>
+    <div id="ai-modal-body" class="p-4 text-sm text-gray-800"></div>
+    <div class="p-4 border-t flex justify-end">
+      <button onclick="closeModal()" class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function checkPurpose() {
+    const btn = document.getElementById('btnCheck');
+    const file = document.getElementById('file').files[0];
+    const purpose = document.getElementById('purpose').value.trim();
+    const knp = parseInt(document.getElementById('knp').value || 0);
+
+    if (!purpose) return showModal('Введите назначение платежа.');
+    if (!file) return showModal('Загрузите инвойс для проверки.');
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.innerHTML = '🔄 Проверка...';
+
+    let endpointPurpose = '/api/Validation/ServicePurpose';
+    if (knp >= 700 && knp < 800) endpointPurpose = '/api/Validation/ProductPurpose';
+
+    try {
+      // Отправляем параллельно текст и документ
+      const formData = new FormData();
+      formData.append('File', file);
+
+      const [textResp, docResp] = await Promise.all([
+        fetch(endpointPurpose + '?purpose=' + encodeURIComponent(purpose), { method: 'POST' }),
+        fetch('/api/Validation/Invoice', { method: 'POST', body: formData })
+      ]);
+
+      const results = [];
+      let allPassed = true;
+
+      // Текст
+      if (textResp.ok) {
+        const textData = await textResp.json();
+        const prob = textData.probability ?? 0;
+        const ok = prob >= 80;
+        results.push({
+          name: 'Назначение платежа',
+          ok,
+          detail: ok
+            ? `Корректно (${prob}%)`
+            : `Нужна доработка (${prob}%)`
+        });
+        if (!ok) allPassed = false;
+      } else {
+        results.push({ name: 'Назначение платежа', ok: false, detail: 'Ошибка анализа текста' });
+        allPassed = false;
+      }
+
+      // Документ
+      if (docResp.ok) {
+        const docData = await docResp.json();
+        const prob = docData.probability ?? 0;
+        const ok = prob >= 85;
+        results.push({
+          name: 'Инвойс',
+          ok,
+          detail: ok
+            ? `Распознан корректно (${prob}%)`
+            : `Неуверенно распознан (${prob}%). Проверьте качество файла.`
+        });
+        if (!ok) allPassed = false;
+      } else {
+        results.push({ name: 'Инвойс', ok: false, detail: 'Не удалось проверить документ.' });
+        allPassed = false;
+      }
+
+      // 💡 Подсказки
+      const tips = [];
+      if (results.find(r => r.name === 'Назначение платежа' && !r.ok)) {
+        tips.push('Уточните назначение: добавьте номер и дату инвойса или договора.');
+        tips.push('Опишите предмет платежа (товары, услуги, аренда и т.п.).');
+        tips.push('Добавьте страну и контрагента, если это международный перевод.');
+      }
+      if (results.find(r => r.name === 'Инвойс' && !r.ok)) {
+        tips.push('Убедитесь, что инвойс читаем и содержит номер, дату и сумму.');
+        tips.push('Проверьте наличие подписи и печати (если требуется).');
+        tips.push('Загрузите документ в PDF или DOCX, а не скан в низком качестве.');
+      }
+
+      // HTML
+      let html = `<p class='font-medium mb-3'>Результаты проверки:</p><ul class='space-y-2'>`;
+      for (const r of results) {
+        html += `<li class='flex items-center gap-2'>
+                        <span>${r.ok ? '✅' : '⚠️'}</span>
+                        <span><strong>${r.name}</strong> — ${r.detail}</span>
+                    </li>`;
+      }
+      html += `</ul>`;
+
+      if (tips.length > 0) {
+        html += `<div class='mt-4'>
+                        <p class='font-medium mb-2'>💡 Рекомендации:</p>
+                        <ul class='list-disc ml-5 text-gray-700 space-y-1'>
+                            ${tips.map(t => `<li>${t}</li>`).join('')}
+                        </ul>
+                    </div>`;
+      } else {
+        html += `<p class='mt-3 text-green-600 font-medium'>✅ Все проверки успешно пройдены. Можно продолжить перевод.</p>`;
+      }
+
+      showModal(html);
+
+    } catch (err) {
+      showModal(`❌ Ошибка: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  function showModal(html) {
+    const modal = document.getElementById('ai-modal');
+    document.getElementById('ai-modal-body').innerHTML = html;
+    modal.classList.remove('hidden');
+  }
+  function closeModal() {
+    document.getElementById('ai-modal').classList.add('hidden');
+  }
+  document.getElementById('btnCheck').addEventListener('click', checkPurpose);
+</script>
